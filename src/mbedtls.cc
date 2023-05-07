@@ -426,10 +426,12 @@ int SSL_accept(SSL *ssl) {
 }
 
 int SSL_shutdown(SSL* ssl) {
+#if 0
     int ret = mbedtls_ssl_close_notify(&(ssl->ctx));
     if (ret != 0) {
         return -1;
     }
+#endif
     return 1;
 }
 
