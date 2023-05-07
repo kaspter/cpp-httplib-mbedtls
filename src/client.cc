@@ -200,13 +200,20 @@ int main(void) {
 #endif
 
     if (1) {
-        auto host = "httpbin.org";
+        std::string qop = "auth"; // "auth-int"
+        std::string user = "hello";
+        std::string password = "world";
+        auto uri = "/digest-auth/" + qop + "/" + user + "/" + password;
+
 #ifdef CPPHTTPLIB_HTTPS_SUPPORT
-        httplib::SSLClient cli(host, 443);
+        auto host = "https://httpbin.org";
+        httplib::Client cli(host);
+        cli.set_digest_auth(user, password);
 #else
+        auto host = "httpbin.org";
         httplib::Client cli(host, 80);
 #endif
-        if (auto res = cli.Get("/digest-auth/auth/hello/world")) {
+        if (auto res = cli.Get(uri.c_str())) {
             cout << res->status << endl;
             cout << res->get_header_value("Content-Type") << endl;
             cout << res->body << endl;
