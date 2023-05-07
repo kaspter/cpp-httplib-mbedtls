@@ -13,6 +13,16 @@
 /*
  * Configuration
  */
+// #define CPPHTTPLIB_OPENSSL_SUPPORT 1
+
+#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifndef CPPHTTPLIB_USE_OPENSSL
+#define CPPHTTPLIB_USE_OPENSSL 0
+#endif
+#ifndef CPPHTTPLIB_USE_MBEDTLS
+#define CPPHTTPLIB_USE_MBEDTLS 0
+#endif
+#endif
 
 #ifndef CPPHTTPLIB_KEEPALIVE_TIMEOUT_SECOND
 #define CPPHTTPLIB_KEEPALIVE_TIMEOUT_SECOND 5
@@ -247,6 +257,11 @@ using socket_t = int;
 #endif // TARGET_OS_OSX
 #endif // _WIN32
 
+#include <iostream>
+#include <sstream>
+
+#if CPPHTTPLIB_USE_OPENSSL
+
 #include <openssl/err.h>
 #include <openssl/evp.h>
 #include <openssl/ssl.h>
@@ -256,14 +271,18 @@ using socket_t = int;
 #include <openssl/applink.c>
 #endif
 
-#include <iostream>
-#include <sstream>
-
 #if OPENSSL_VERSION_NUMBER < 0x1010100fL
 #error Sorry, OpenSSL versions prior to 1.1.1 are not supported
 #elif OPENSSL_VERSION_NUMBER < 0x30000000L
 #define SSL_get1_peer_certificate SSL_get_peer_certificate
 #endif
+
+#endif // CPPHTTPLIB_USE_OPENSSL
+
+#if CPPHTTPLIB_USE_MBEDTLS
+#include "mbedtls.hpp"
+#define SSL_get1_peer_certificate SSL_get_peer_certificate
+#endif // CPPHTTPLIB_USE_MBEDTLS
 
 #endif
 
@@ -4457,6 +4476,8 @@ inline bool has_crlf(const std::string &s) {
 }
 
 #ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+
+#if CPPHTTPLIB_USE_OPENSSL
 inline std::string message_digest(const std::string &s, const EVP_MD *algo) {
   auto context = std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)>(
       EVP_MD_CTX_new(), EVP_MD_CTX_free);
@@ -4489,6 +4510,48 @@ inline std::string SHA_512(const std::string &s) {
   return message_digest(s, EVP_sha512());
 }
 #endif
+
+#if CPPHTTPLIB_USE_MBEDTLS
+
+#include <mbedtls/md.h>
+#include <sstream>
+#include <iomanip>
+
+inline std::string message_digest(const std::string& s, mbedtls_md_type_t algo)
+{
+    mbedtls_md_context_t ctx;
+    mbedtls_md_init(&ctx);
+    mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(algo), 0);
+    mbedtls_md_starts(&ctx);
+    mbedtls_md_update(&ctx, (const unsigned char*)s.c_str(), s.size());
+    unsigned char hash[mbedtls_md_get_size(mbedtls_md_info_from_type(algo))];
+    mbedtls_md_finish(&ctx, hash);
+    mbedtls_md_free(&ctx);
+
+    std::stringstream ss;
+    for (auto i = 0u; i < mbedtls_md_get_size(mbedtls_md_info_from_type(algo)); ++i) {
+        ss << std::hex << std::setw(2) << std::setfill('0') << (unsigned int)hash[i];
+    }
+
+    return ss.str();
+}
+
+inline std::string MD5(const std::string& s)
+{
+    return message_digest(s, MBEDTLS_MD_MD5);
+}
+
+inline std::string SHA_256(const std::string& s)
+{
+    return message_digest(s, MBEDTLS_MD_SHA256);
+}
+
+inline std::string SHA_512(const std::string& s)
+{
+    return message_digest(s, MBEDTLS_MD_SHA512);
+}
+#endif
+#endif // CPPHTTPLIB_OPENSSL_SUPPORT
 
 #ifdef CPPHTTPLIB_OPENSSL_SUPPORT
 #ifdef _WIN32
@@ -7700,8 +7763,10 @@ process_client_socket_ssl(SSL *ssl, socket_t sock, time_t read_timeout_sec,
 class SSLInit {
 public:
   SSLInit() {
+#if CPPHTTPLIB_USE_OPENSSL
     OPENSSL_init_ssl(
         OPENSSL_INIT_LOAD_SSL_STRINGS | OPENSSL_INIT_LOAD_CRYPTO_STRINGS, NULL);
+#endif
   }
 };
 
@@ -7807,7 +7872,7 @@ inline socket_t SSLSocketStream::socket() const { return sock_; }
 static SSLInit sslinit_;
 
 } // namespace detail
-
+#if CPPHTTPLIB_USE_OPENSSL  // FIXME
 // SSL HTTP server implementation
 inline SSLServer::SSLServer(const char *cert_path, const char *private_key_path,
                             const char *client_ca_cert_file_path,
@@ -7917,6 +7982,7 @@ inline bool SSLServer::process_and_close_socket(socket_t sock) {
   detail::close_socket(sock);
   return ret;
 }
+#endif
 
 // SSL HTTP client implementation
 inline SSLClient::SSLClient(const std::string &host)
@@ -7977,6 +8043,7 @@ inline SSLClient::~SSLClient() {
 inline bool SSLClient::is_valid() const { return ctx_; }
 
 inline void SSLClient::set_ca_cert_store(X509_STORE *ca_cert_store) {
+#if CPPHTTPLIB_USE_OPENSSL  // FIXME
   if (ca_cert_store) {
     if (ctx_) {
       if (SSL_CTX_get_cert_store(ctx_) != ca_cert_store) {
@@ -7987,6 +8054,7 @@ inline void SSLClient::set_ca_cert_store(X509_STORE *ca_cert_store) {
       X509_STORE_free(ca_cert_store);
     }
   }
+#endif
 }
 
 inline long SSLClient::get_openssl_verify_result() const {
@@ -8082,7 +8150,11 @@ inline bool SSLClient::load_certs() {
       loaded = detail::load_system_certs_on_macos(SSL_CTX_get_cert_store(ctx_));
 #endif // TARGET_OS_OSX
 #endif // _WIN32
-      if (!loaded) { SSL_CTX_set_default_verify_paths(ctx_); }
+      if (!loaded) {
+#if CPPHTTPLIB_USE_OPENSSL
+        SSL_CTX_set_default_verify_paths(ctx_);
+#endif
+      }
     }
   });
 
@@ -8109,6 +8181,7 @@ inline bool SSLClient::initialize_ssl(Socket &socket, Error &error) {
         }
 
         if (server_certificate_verification_) {
+#if CPPHTTPLIB_USE_OPENSSL
           verify_result_ = SSL_get_verify_result(ssl2);
 
           if (verify_result_ != X509_V_OK) {
@@ -8129,6 +8202,7 @@ inline bool SSLClient::initialize_ssl(Socket &socket, Error &error) {
             return false;
           }
           X509_free(server_cert);
+#endif
         }
 
         return true;
@@ -8205,7 +8279,7 @@ inline bool SSLClient::verify_host(X509 *server_cert) const {
 inline bool
 SSLClient::verify_host_with_subject_alt_name(X509 *server_cert) const {
   auto ret = false;
-
+#if CPPHTTPLIB_USE_OPENSSL
   auto type = GEN_DNS;
 
   struct in6_addr addr6;
@@ -8254,10 +8328,12 @@ SSLClient::verify_host_with_subject_alt_name(X509 *server_cert) const {
   }
 
   GENERAL_NAMES_free((STACK_OF(GENERAL_NAME) *)alt_names);
+#endif
   return ret;
 }
 
 inline bool SSLClient::verify_host_with_common_name(X509 *server_cert) const {
+#if CPPHTTPLIB_USE_OPENSSL
   const auto subject_name = X509_get_subject_name(server_cert);
 
   if (subject_name != nullptr) {
@@ -8269,7 +8345,7 @@ inline bool SSLClient::verify_host_with_common_name(X509 *server_cert) const {
       return check_host_name(name, static_cast<size_t>(name_len));
     }
   }
-
+#endif
   return false;
 }
 
