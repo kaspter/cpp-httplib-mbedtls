@@ -13,9 +13,9 @@
 /*
  * Configuration
  */
-// #define CPPHTTPLIB_OPENSSL_SUPPORT 1
+// #define CPPHTTPLIB_HTTPS_SUPPORT 1
 
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
 #ifndef CPPHTTPLIB_USE_OPENSSL
 #define CPPHTTPLIB_USE_OPENSSL 0
 #endif
@@ -234,7 +234,7 @@ using socket_t = int;
 #include <sys/stat.h>
 #include <thread>
 
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
 #ifdef _WIN32
 #include <wincrypt.h>
 
@@ -489,7 +489,7 @@ struct Request {
   ResponseHandler response_handler;
   ContentReceiverWithProgress content_receiver;
   Progress progress;
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
   const SSL *ssl = nullptr;
 #endif
 
@@ -1107,7 +1107,7 @@ public:
 
   void set_basic_auth(const std::string &username, const std::string &password);
   void set_bearer_token_auth(const std::string &token);
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
   void set_digest_auth(const std::string &username,
                        const std::string &password);
 #endif
@@ -1127,18 +1127,18 @@ public:
   void set_proxy_basic_auth(const std::string &username,
                             const std::string &password);
   void set_proxy_bearer_token_auth(const std::string &token);
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
   void set_proxy_digest_auth(const std::string &username,
                              const std::string &password);
 #endif
 
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
   void set_ca_cert_path(const std::string &ca_cert_file_path,
                         const std::string &ca_cert_dir_path = std::string());
   void set_ca_cert_store(X509_STORE *ca_cert_store);
 #endif
 
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
   void enable_server_certificate_verification(bool enabled);
 #endif
 
@@ -1147,7 +1147,7 @@ public:
 protected:
   struct Socket {
     socket_t sock = INVALID_SOCKET;
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
     SSL *ssl = nullptr;
 #endif
 
@@ -1210,7 +1210,7 @@ protected:
   std::string basic_auth_username_;
   std::string basic_auth_password_;
   std::string bearer_token_auth_token_;
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
   std::string digest_auth_username_;
   std::string digest_auth_password_;
 #endif
@@ -1235,19 +1235,19 @@ protected:
   std::string proxy_basic_auth_username_;
   std::string proxy_basic_auth_password_;
   std::string proxy_bearer_token_auth_token_;
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
   std::string proxy_digest_auth_username_;
   std::string proxy_digest_auth_password_;
 #endif
 
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
   std::string ca_cert_file_path_;
   std::string ca_cert_dir_path_;
 
   X509_STORE *ca_cert_store_ = nullptr;
 #endif
 
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
   bool server_certificate_verification_ = true;
 #endif
 
@@ -1479,7 +1479,7 @@ public:
 
   void set_basic_auth(const std::string &username, const std::string &password);
   void set_bearer_token_auth(const std::string &token);
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
   void set_digest_auth(const std::string &username,
                        const std::string &password);
 #endif
@@ -1499,19 +1499,19 @@ public:
   void set_proxy_basic_auth(const std::string &username,
                             const std::string &password);
   void set_proxy_bearer_token_auth(const std::string &token);
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
   void set_proxy_digest_auth(const std::string &username,
                              const std::string &password);
 #endif
 
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
   void enable_server_certificate_verification(bool enabled);
 #endif
 
   void set_logger(Logger logger);
 
   // SSL
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
   void set_ca_cert_path(const std::string &ca_cert_file_path,
                         const std::string &ca_cert_dir_path = std::string());
 
@@ -1525,12 +1525,12 @@ public:
 private:
   std::unique_ptr<ClientImpl> cli_;
 
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
   bool is_ssl_ = false;
 #endif
 };
 
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
 class SSLServer : public Server {
 public:
   SSLServer(const char *cert_path, const char *private_key_path,
@@ -2559,7 +2559,7 @@ private:
   static const size_t read_buff_size_ = 1024 * 4;
 };
 
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
 class SSLSocketStream : public Stream {
 public:
   SSLSocketStream(socket_t sock, SSL *ssl, time_t read_timeout_sec,
@@ -4475,7 +4475,7 @@ inline bool has_crlf(const std::string &s) {
   return false;
 }
 
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
 
 #if CPPHTTPLIB_USE_OPENSSL
 inline std::string message_digest(const std::string &s, const EVP_MD *algo) {
@@ -4551,9 +4551,9 @@ inline std::string SHA_512(const std::string& s)
     return message_digest(s, MBEDTLS_MD_SHA512);
 }
 #endif
-#endif // CPPHTTPLIB_OPENSSL_SUPPORT
+#endif // CPPHTTPLIB_HTTPS_SUPPORT
 
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
 #ifdef _WIN32
 // NOTE: This code came up with the following stackoverflow post:
 // https://stackoverflow.com/questions/9507184/can-openssl-on-windows-use-the-system-certificate-store
@@ -4672,7 +4672,7 @@ inline bool load_system_certs_on_macos(X509_STORE *store) {
 }
 #endif // TARGET_OS_OSX
 #endif // _WIN32
-#endif // CPPHTTPLIB_OPENSSL_SUPPORT
+#endif // CPPHTTPLIB_HTTPS_SUPPORT
 
 #ifdef _WIN32
 class WSInit {
@@ -4692,7 +4692,7 @@ public:
 static WSInit wsinit_;
 #endif
 
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
 inline std::pair<std::string, std::string> make_digest_authentication_header(
     const Request &req, const std::map<std::string, std::string> &auth,
     size_t cnonce_count, const std::string &cnonce, const std::string &username,
@@ -6290,7 +6290,7 @@ inline void ClientImpl::copy_settings(const ClientImpl &rhs) {
   basic_auth_username_ = rhs.basic_auth_username_;
   basic_auth_password_ = rhs.basic_auth_password_;
   bearer_token_auth_token_ = rhs.bearer_token_auth_token_;
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
   digest_auth_username_ = rhs.digest_auth_username_;
   digest_auth_password_ = rhs.digest_auth_password_;
 #endif
@@ -6308,16 +6308,16 @@ inline void ClientImpl::copy_settings(const ClientImpl &rhs) {
   proxy_basic_auth_username_ = rhs.proxy_basic_auth_username_;
   proxy_basic_auth_password_ = rhs.proxy_basic_auth_password_;
   proxy_bearer_token_auth_token_ = rhs.proxy_bearer_token_auth_token_;
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
   proxy_digest_auth_username_ = rhs.proxy_digest_auth_username_;
   proxy_digest_auth_password_ = rhs.proxy_digest_auth_password_;
 #endif
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
   ca_cert_file_path_ = rhs.ca_cert_file_path_;
   ca_cert_dir_path_ = rhs.ca_cert_dir_path_;
   ca_cert_store_ = rhs.ca_cert_store_;
 #endif
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
   server_certificate_verification_ = rhs.server_certificate_verification_;
 #endif
   logger_ = rhs.logger_;
@@ -6376,7 +6376,7 @@ inline void ClientImpl::close_socket(Socket &socket) {
          socket_requests_are_from_thread_ == std::this_thread::get_id());
 
   // It is also a bug if this happens while SSL is still active
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
   assert(socket.ssl == nullptr);
 #endif
   if (socket.sock == INVALID_SOCKET) { return; }
@@ -6456,7 +6456,7 @@ inline bool ClientImpl::send_(Request &req, Response &res, Error &error) {
     if (!is_alive) {
       if (!create_and_connect_socket(socket_, error)) { return false; }
 
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
       // TODO: refactoring
       if (is_ssl()) {
         auto &scli = static_cast<SSLClient &>(*this);
@@ -6560,7 +6560,7 @@ inline bool ClientImpl::handle_request(Stream &strm, Request &req,
     ret = redirect(req, res, error);
   }
 
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
   if ((res.status == 401 || res.status == 407) &&
       req.authorization_count_ < 5) {
     auto is_proxy = res.status == 407;
@@ -6633,7 +6633,7 @@ inline bool ClientImpl::redirect(Request &req, Response &res, Error &error) {
     return detail::redirect(*this, req, res, path, location, error);
   } else {
     if (next_scheme == "https") {
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
       SSLClient cli(next_host.c_str(), next_port);
       cli.copy_settings(*this);
       if (ca_cert_store_) { cli.set_ca_cert_store(ca_cert_store_); }
@@ -6905,7 +6905,7 @@ inline bool ClientImpl::process_request(Stream &strm, Request &req,
   // Send request
   if (!write_request(strm, req, close_connection, error)) { return false; }
 
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
   if (is_ssl()) {
     auto is_proxy_enabled = !proxy_host_.empty() && proxy_port_ != -1;
     if (!is_proxy_enabled) {
@@ -7576,7 +7576,7 @@ inline void ClientImpl::set_bearer_token_auth(const std::string &token) {
   bearer_token_auth_token_ = token;
 }
 
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
 inline void ClientImpl::set_digest_auth(const std::string &username,
                                         const std::string &password) {
   digest_auth_username_ = username;
@@ -7632,7 +7632,7 @@ inline void ClientImpl::set_proxy_bearer_token_auth(const std::string &token) {
   proxy_bearer_token_auth_token_ = token;
 }
 
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
 inline void ClientImpl::set_proxy_digest_auth(const std::string &username,
                                               const std::string &password) {
   proxy_digest_auth_username_ = username;
@@ -7640,7 +7640,7 @@ inline void ClientImpl::set_proxy_digest_auth(const std::string &username,
 }
 #endif
 
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
 inline void ClientImpl::set_ca_cert_path(const std::string &ca_cert_file_path,
                                          const std::string &ca_cert_dir_path) {
   ca_cert_file_path_ = ca_cert_file_path;
@@ -7654,7 +7654,7 @@ inline void ClientImpl::set_ca_cert_store(X509_STORE *ca_cert_store) {
 }
 #endif
 
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
 inline void ClientImpl::enable_server_certificate_verification(bool enabled) {
   server_certificate_verification_ = enabled;
 }
@@ -7667,7 +7667,7 @@ inline void ClientImpl::set_logger(Logger logger) {
 /*
  * SSL Implementation
  */
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
 namespace detail {
 
 template <typename U, typename V>
@@ -8392,7 +8392,7 @@ inline Client::Client(const std::string &scheme_host_port,
   if (std::regex_match(scheme_host_port, m, re)) {
     auto scheme = m[1].str();
 
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
     if (!scheme.empty() && (scheme != "http" && scheme != "https")) {
 #else
     if (!scheme.empty() && scheme != "http") {
@@ -8413,7 +8413,7 @@ inline Client::Client(const std::string &scheme_host_port,
     auto port = !port_str.empty() ? std::stoi(port_str) : (is_ssl ? 443 : 80);
 
     if (is_ssl) {
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
       cli_ = detail::make_unique<SSLClient>(host, port, client_cert_path,
                                             client_key_path);
       is_ssl_ = is_ssl;
@@ -8785,7 +8785,7 @@ inline void Client::set_basic_auth(const std::string &username,
 inline void Client::set_bearer_token_auth(const std::string &token) {
   cli_->set_bearer_token_auth(token);
 }
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
 inline void Client::set_digest_auth(const std::string &username,
                                     const std::string &password) {
   cli_->set_digest_auth(username, password);
@@ -8817,14 +8817,14 @@ inline void Client::set_proxy_basic_auth(const std::string &username,
 inline void Client::set_proxy_bearer_token_auth(const std::string &token) {
   cli_->set_proxy_bearer_token_auth(token);
 }
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
 inline void Client::set_proxy_digest_auth(const std::string &username,
                                           const std::string &password) {
   cli_->set_proxy_digest_auth(username, password);
 }
 #endif
 
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
 inline void Client::enable_server_certificate_verification(bool enabled) {
   cli_->enable_server_certificate_verification(enabled);
 }
@@ -8832,7 +8832,7 @@ inline void Client::enable_server_certificate_verification(bool enabled) {
 
 inline void Client::set_logger(Logger logger) { cli_->set_logger(logger); }
 
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
 inline void Client::set_ca_cert_path(const std::string &ca_cert_file_path,
                                      const std::string &ca_cert_dir_path) {
   cli_->set_ca_cert_path(ca_cert_file_path, ca_cert_dir_path);

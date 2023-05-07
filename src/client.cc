@@ -138,7 +138,7 @@ int main(void) {
 
     if (1) {
       auto host = "jsonplaceholder.typicode.com";
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
       httplib::SSLClient cli(host);
       cli.enable_server_certificate_verification(true);
 #else
@@ -154,7 +154,7 @@ int main(void) {
       }
     }
 
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
     if (1) {
         auto host = "https://vis.komect.com:8886";
         auto deviceId = "3824112000000009";
@@ -201,7 +201,7 @@ int main(void) {
 
     if (1) {
         auto host = "httpbin.org";
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#ifdef CPPHTTPLIB_HTTPS_SUPPORT
         httplib::SSLClient cli(host, 443);
 #else
         httplib::Client cli(host, 80);
